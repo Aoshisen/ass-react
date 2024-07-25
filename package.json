@@ -1,0 +1,9 @@
+{
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "vite": "^5.3.5"
+  }
+}
