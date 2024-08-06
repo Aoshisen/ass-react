@@ -14,10 +14,12 @@ function createElement(type, props, ...children) {
 		type,
 		props: {
 			...props,
-			children: children.map(child =>
-				typeof child === "string"
+			children: children.map(child => {
+				const isTextNode = typeof child === "string" || typeof child === "number";
+				return isTextNode
 					? createTextNode(child)
 					: child
+			}
 			)
 		}
 	}
@@ -71,7 +73,7 @@ function initChildren(fiber, children) {
 function performWorkUnit(fiber) {
 	const isFunctionComponent = typeof fiber.type === 'function';
 	if (isFunctionComponent) {
-		console.log(fiber.type(), "type performed");
+		console.log(fiber.type(fiber.props), "type performed");
 	} else {
 		if (!fiber.dom) {
 			const dom = fiber.dom = createDom(fiber.type)
@@ -81,16 +83,19 @@ function performWorkUnit(fiber) {
 		}
 	}
 	// 需要注意的是这里是一个数组
-	const children = isFunctionComponent ? [fiber.type()] : fiber.props.children;
+	const children = isFunctionComponent ? [fiber.type(fiber.props)] : fiber.props.children;
 	initChildren(fiber, children)
 
 	if (fiber.child) {
 		return fiber.child;
 	}
-	if (fiber.sibling) {
-		return fiber.sibling;
+	let nextFiber = fiber.sibling;
+	while (nextFiber) {
+		if(nextFiber.sibling){
+			return nextFiber.sibling;
+		}
+		nextFiber = nextFiber.parent;
 	}
-	return fiber.parent?.sibling;
 }
 function commitRoot() {
 	commitWork(root.child)

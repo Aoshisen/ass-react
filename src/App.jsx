@@ -8,5 +8,6 @@ export default function App() {
 		<div class="container">
 			ass
 			<Counter num={10} />
+			<Counter num={20} />
 		</div>)
 }
