@@ -47,9 +47,6 @@ function updateProps(dom, props) {
 	})
 }
 function initChildren(fiber, children) {
-	// 3. 建立当前的dom 元素的子父级,兄弟节点的关系
-	// const children = fiber.props.children;
-	// 记录上一个节点, 方便给上一个节点绑定上sibling 属性
 	let prevChild = null;
 	children.forEach((child, index) => {
 		let newFiber = {
@@ -77,8 +74,6 @@ function performWorkUnit(fiber) {
 	} else {
 		if (!fiber.dom) {
 			const dom = fiber.dom = createDom(fiber.type)
-			// fiber.parent.dom.append(dom)
-			// 统一的在commitRoot 里面去处理添加到视图的逻辑
 			updateProps(dom, fiber.props)
 		}
 	}
@@ -91,7 +86,7 @@ function performWorkUnit(fiber) {
 	}
 	let nextFiber = fiber.sibling;
 	while (nextFiber) {
-		if(nextFiber.sibling){
+		if (nextFiber.sibling) {
 			return nextFiber.sibling;
 		}
 		nextFiber = nextFiber.parent;
@@ -103,13 +98,11 @@ function commitRoot() {
 }
 function commitWork(fiber) {
 	if (!fiber) return void 0;
-	// 由于functionComponent 没有dom 所以需要递归的去查找有dom 的父级容器进行添加
 	let parent = fiber.parent;
 	while (!parent.dom) {
 		parent = parent.parent;
 	}
 	if (fiber.dom) {
-		// 在为function 的时候其fiber.dom 不存在
 		parent.dom.append(fiber.dom)
 	}
 	commitWork(fiber.child)
@@ -125,7 +118,6 @@ function workerLoop(IdleDeadline) {
 		}
 	}
 	if (!nextWorkOfUnit && root) {
-		//dom 节点已经处理完成了
 		commitRoot()
 	}
 	requestIdleCallback(workerLoop)
