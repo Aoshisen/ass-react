@@ -44,9 +44,9 @@ function updateProps(dom, props) {
 		}
 	})
 }
-function initChildren(fiber) {
+function initChildren(fiber, children) {
 	// 3. 建立当前的dom 元素的子父级,兄弟节点的关系
-	const children = fiber.props.children;
+	// const children = fiber.props.children;
 	// 记录上一个节点, 方便给上一个节点绑定上sibling 属性
 	let prevChild = null;
 	children.forEach((child, index) => {
@@ -69,13 +69,21 @@ function initChildren(fiber) {
 }
 
 function performWorkUnit(fiber) {
-	if (!fiber.dom) {
-		const dom = fiber.dom = createDom(fiber.type)
-		// fiber.parent.dom.append(dom)
-		// 统一的在commitRoot 里面去处理添加到视图的逻辑
-		updateProps(dom, fiber.props)
+	const isFunctionComponent = typeof fiber.type === 'function';
+	if (isFunctionComponent) {
+		console.log(fiber.type(), "type performed");
+	} else {
+		if (!fiber.dom) {
+			const dom = fiber.dom = createDom(fiber.type)
+			// fiber.parent.dom.append(dom)
+			// 统一的在commitRoot 里面去处理添加到视图的逻辑
+			updateProps(dom, fiber.props)
+		}
 	}
-	initChildren(fiber)
+	// 需要注意的是这里是一个数组
+	const children = isFunctionComponent ? [fiber.type()] : fiber.props.children;
+	initChildren(fiber, children)
+
 	if (fiber.child) {
 		return fiber.child;
 	}
@@ -90,7 +98,15 @@ function commitRoot() {
 }
 function commitWork(fiber) {
 	if (!fiber) return void 0;
-	fiber.parent.dom.append(fiber.dom)
+	// 由于functionComponent 没有dom 所以需要递归的去查找有dom 的父级容器进行添加
+	let parent = fiber.parent;
+	while (!parent.dom) {
+		parent = parent.parent;
+	}
+	if (fiber.dom) {
+		// 在为function 的时候其fiber.dom 不存在
+		parent.dom.append(fiber.dom)
+	}
 	commitWork(fiber.child)
 	commitWork(fiber.sibling)
 }
