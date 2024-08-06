@@ -1,4 +1,5 @@
-let nextFiber = null;
+let nextWorkOfUnit = null;
+let root = null;
 function createTextNode(text) {
 	return {
 		type: "TEXT_ELEMENT",
@@ -24,12 +25,13 @@ function createElement(type, props, ...children) {
 
 function render(el, container) {
 	//在这里去初始化 我们的任务
-	nextFiber = {
+	nextWorkOfUnit = {
 		dom: container,
 		props: {
 			children: [el]
 		}
 	}
+	root = nextWorkOfUnit;
 }
 
 function createDom(type) {
@@ -69,8 +71,8 @@ function initChildren(fiber) {
 function performWorkUnit(fiber) {
 	if (!fiber.dom) {
 		const dom = fiber.dom = createDom(fiber.type)
-		console.log(dom)
-		fiber.parent.dom.append(dom)
+		// fiber.parent.dom.append(dom)
+		// 统一的在commitRoot 里面去处理添加到视图的逻辑
 		updateProps(dom, fiber.props)
 	}
 	initChildren(fiber)
@@ -82,14 +84,28 @@ function performWorkUnit(fiber) {
 	}
 	return fiber.parent?.sibling;
 }
+function commitRoot() {
+	commitWork(root.child)
+	root = null;
+}
+function commitWork(fiber) {
+	if (!fiber) return void 0;
+	fiber.parent.dom.append(fiber.dom)
+	commitWork(fiber.child)
+	commitWork(fiber.sibling)
+}
 function workerLoop(IdleDeadline) {
 	let shouldYield = false;
-	while (!shouldYield && nextFiber) {
+	while (!shouldYield && nextWorkOfUnit) {
 		const remaining = IdleDeadline.timeRemaining()
-		nextFiber = performWorkUnit(nextFiber)
+		nextWorkOfUnit = performWorkUnit(nextWorkOfUnit)
 		if (remaining < 1) {
 			shouldYield = true;
 		}
+	}
+	if (!nextWorkOfUnit && root) {
+		//dom 节点已经处理完成了
+		commitRoot()
 	}
 	requestIdleCallback(workerLoop)
 }
