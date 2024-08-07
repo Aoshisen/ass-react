@@ -1,3 +1,13 @@
 import React from "./core/React.js"
-const App = <div class="container">ass</div>
-export default App;
+function Counter({ num }) {
+	console.log(num,"<<<<<<<<<<<<<<<")
+	return <h1>Counter {num}</h1>
+}
+export default function App() {
+	return (
+		<div class="container">
+			ass
+			<Counter num={10} />
+			<Counter num={20} />
+		</div>)
+}

@@ -14,10 +14,12 @@ function createElement(type, props, ...children) {
 		type,
 		props: {
 			...props,
-			children: children.map(child =>
-				typeof child === "string"
+			children: children.map(child => {
+				const isTextNode = typeof child === "string" || typeof child === "number";
+				return isTextNode
 					? createTextNode(child)
 					: child
+			}
 			)
 		}
 	}
@@ -44,10 +46,7 @@ function updateProps(dom, props) {
 		}
 	})
 }
-function initChildren(fiber) {
-	// 3. 建立当前的dom 元素的子父级,兄弟节点的关系
-	const children = fiber.props.children;
-	// 记录上一个节点, 方便给上一个节点绑定上sibling 属性
+function initChildren(fiber, children) {
 	let prevChild = null;
 	children.forEach((child, index) => {
 		let newFiber = {
@@ -69,20 +68,29 @@ function initChildren(fiber) {
 }
 
 function performWorkUnit(fiber) {
-	if (!fiber.dom) {
-		const dom = fiber.dom = createDom(fiber.type)
-		// fiber.parent.dom.append(dom)
-		// 统一的在commitRoot 里面去处理添加到视图的逻辑
-		updateProps(dom, fiber.props)
+	const isFunctionComponent = typeof fiber.type === 'function';
+	if (isFunctionComponent) {
+		console.log(fiber.type(fiber.props), "type performed");
+	} else {
+		if (!fiber.dom) {
+			const dom = fiber.dom = createDom(fiber.type)
+			updateProps(dom, fiber.props)
+		}
 	}
-	initChildren(fiber)
+	// 需要注意的是这里是一个数组
+	const children = isFunctionComponent ? [fiber.type(fiber.props)] : fiber.props.children;
+	initChildren(fiber, children)
+
 	if (fiber.child) {
 		return fiber.child;
 	}
-	if (fiber.sibling) {
-		return fiber.sibling;
+	let nextFiber = fiber.sibling;
+	while (nextFiber) {
+		if (nextFiber.sibling) {
+			return nextFiber.sibling;
+		}
+		nextFiber = nextFiber.parent;
 	}
-	return fiber.parent?.sibling;
 }
 function commitRoot() {
 	commitWork(root.child)
@@ -90,7 +98,13 @@ function commitRoot() {
 }
 function commitWork(fiber) {
 	if (!fiber) return void 0;
-	fiber.parent.dom.append(fiber.dom)
+	let parent = fiber.parent;
+	while (!parent.dom) {
+		parent = parent.parent;
+	}
+	if (fiber.dom) {
+		parent.dom.append(fiber.dom)
+	}
 	commitWork(fiber.child)
 	commitWork(fiber.sibling)
 }
@@ -104,7 +118,6 @@ function workerLoop(IdleDeadline) {
 		}
 	}
 	if (!nextWorkOfUnit && root) {
-		//dom 节点已经处理完成了
 		commitRoot()
 	}
 	requestIdleCallback(workerLoop)
