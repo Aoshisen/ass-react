@@ -79,6 +79,7 @@ function updateFunctionComponent(fiber) {
 	const children = [fiber.type(fiber.props)];
 	initChildren(fiber, children)
 }
+
 function updateHostComponent(fiber) {
 	if (!fiber.dom) {
 		const dom = fiber.dom = createDom(fiber.type)
@@ -115,6 +116,7 @@ function commitRoot() {
 	commitWork(root.child)
 	root = null;
 }
+
 function commitWork(fiber) {
 	if (!fiber) return void 0;
 	let parent = fiber.parent;
