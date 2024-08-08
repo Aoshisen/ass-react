@@ -1,7 +1,7 @@
 import React from "./core/React.js"
 function Counter({ num }) {
-	console.log(num,"<<<<<<<<<<<<<<<")
-	return <h1>Counter {num}</h1>
+	console.log(num, "this is counter")
+	return <h1>{num}Counter</h1>
 }
 export default function App() {
 	return (

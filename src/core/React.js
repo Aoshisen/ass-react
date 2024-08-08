@@ -1,5 +1,6 @@
 let nextWorkOfUnit = null;
 let root = null;
+
 function createTextNode(text) {
 	return {
 		type: "TEXT_ELEMENT",
@@ -39,6 +40,7 @@ function render(el, container) {
 function createDom(type) {
 	return type === "TEXT_ELEMENT" ? document.createTextNode("") : document.createElement(type);
 }
+
 function updateProps(dom, props) {
 	Object.keys(props).forEach(key => {
 		if (key !== "children") {
@@ -46,6 +48,7 @@ function updateProps(dom, props) {
 		}
 	})
 }
+
 function initChildren(fiber, children) {
 	let prevChild = null;
 	children.forEach((child, index) => {
@@ -67,31 +70,42 @@ function initChildren(fiber, children) {
 	});
 }
 
+function updateFunctionComponent(fiber) {
+	const children = [fiber.type(fiber.props)];
+	initChildren(fiber, children)
+}
+function updateHostComponent(fiber) {
+	if (!fiber.dom) {
+		const dom = fiber.dom = createDom(fiber.type)
+		updateProps(dom, fiber.props)
+	}
+	const children = fiber.props.children;
+	initChildren(fiber, children)
+}
+
 function performWorkUnit(fiber) {
 	const isFunctionComponent = typeof fiber.type === 'function';
 	if (isFunctionComponent) {
-		console.log(fiber.type(fiber.props), "type performed");
+		updateFunctionComponent(fiber);
 	} else {
-		if (!fiber.dom) {
-			const dom = fiber.dom = createDom(fiber.type)
-			updateProps(dom, fiber.props)
-		}
+		updateHostComponent(fiber);
 	}
-	// 需要注意的是这里是一个数组
-	const children = isFunctionComponent ? [fiber.type(fiber.props)] : fiber.props.children;
-	initChildren(fiber, children)
 
 	if (fiber.child) {
 		return fiber.child;
 	}
-	let nextFiber = fiber.sibling;
-	while (nextFiber) {
-		if (nextFiber.sibling) {
-			return nextFiber.sibling;
+	if (fiber.sibling) {
+		return fiber.sibling;
+	}
+	let nextFiberParent = fiber.parent;
+	while (nextFiberParent) {
+		if (nextFiberParent.sibling) {
+			return nextFiberParent.sibling;
 		}
-		nextFiber = nextFiber.parent;
+		nextFiberParent = nextFiberParent.parent;
 	}
 }
+
 function commitRoot() {
 	commitWork(root.child)
 	root = null;
