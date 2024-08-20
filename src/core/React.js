@@ -168,7 +168,15 @@ function performWorkUnit(fiber) {
 }
 
 function commitDeletions(fiber) {
-	fiber.dom.parentNode.removeChild(fiber.dom)
+	if (fiber.dom) {
+		let fiberParent = fiber.parent;
+		while (!fiberParent.dom) {
+			fiberParent = fiberParent.parent;
+		}
+		fiberParent.dom.removeChild(fiber.dom)
+	} else {
+		commitDeletions(fiber.child)
+	}
 }
 function commitRoot() {
 	//删除需要删除的节点
@@ -181,15 +189,15 @@ function commitRoot() {
 
 function commitWork(fiber) {
 	if (!fiber) return void 0;
-	let parent = fiber.parent;
-	while (!parent.dom) {
-		parent = parent.parent;
+	let fiberParent = fiber.parent;
+	while (!fiberParent.dom) {
+		fiberParent = fiberParent.parent;
 	}
 	if (fiber.effectTag === "update") {
 		updateProps(fiber.dom, fiber.props, fiber.alternate?.props)
 	} else if (fiber.effectTag === "placement") {
 		if (fiber.dom) {
-			parent.dom.append(fiber.dom)
+			fiberParent.dom.append(fiber.dom)
 		}
 	}
 	commitWork(fiber.child)
