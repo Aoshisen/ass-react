@@ -2,6 +2,7 @@ let nextWorkOfUnit = null;
 // work in progress
 let wipRoot = null;
 let currentRoot = null;
+let deletions = [];
 
 function createTextNode(text) {
 	return {
@@ -80,7 +81,7 @@ function updateProps(dom, nextProps, prevProps) {
 
 }
 
-// initChildren to reconcile
+// initChildren to reconcile 
 function reconcileChildren(fiber, children) {
 	let oldFiber = fiber.alternate?.child;
 	let prevChild = null;
@@ -109,6 +110,12 @@ function reconcileChildren(fiber, children) {
 				dom: null,
 				effectTag: "placement"
 			}
+			//如果类型不一样的话就去删除当前的节点, 创建当前需要删除节点的一个数组, 在重新commitRoot 的时候再去删除数组里面的元素
+			if (oldFiber) {
+				// console.log("should delete", oldFiber)
+				deletions.push(oldFiber)
+			}
+
 		}
 		if (oldFiber) {
 			oldFiber = oldFiber.sibling
@@ -160,10 +167,16 @@ function performWorkUnit(fiber) {
 	}
 }
 
+function commitDeletions(fiber) {
+	fiber.dom.parentNode.removeChild(fiber.dom)
+}
 function commitRoot() {
+	//删除需要删除的节点
+	deletions.forEach(commitDeletions)
 	commitWork(wipRoot.child)
 	currentRoot = wipRoot;
 	wipRoot = null;
+	deletions = []
 }
 
 function commitWork(fiber) {

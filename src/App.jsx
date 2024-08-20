@@ -1,16 +1,20 @@
 import React from "./core/React.js"
-let num = 10;
-function Counter() {
-	function handleClick() {
-		num++;
-		React.update()
-	}
-	return <h1>{num}Counter <button onClick={handleClick}>clickMe</button></h1>
-}
+let toggle = true;
 export default function App() {
-	return (
-		<div class="container">
-			ass
-			<Counter />
-		</div>)
+	const foo = <p>foo</p>;
+	const bar = <div>bar</div>
+	function toggleFooBar() {
+		toggle = !toggle;
+		React.update(App, null)
+	}
+	return <div>
+		test for update
+		<div>
+			{
+				toggle ? foo : bar
+			}
+		</div>
+		<button onClick={toggleFooBar}>toggle</button>
+	</div>
+
 }
