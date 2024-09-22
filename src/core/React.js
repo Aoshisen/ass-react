@@ -193,6 +193,7 @@ function commitDeletions(fiber) {
 		commitDeletions(fiber.child)
 	}
 }
+
 function commitRoot() {
 	//删除需要删除的节点
 	deletions.forEach(commitDeletions)
@@ -218,6 +219,7 @@ function commitWork(fiber) {
 	commitWork(fiber.child)
 	commitWork(fiber.sibling)
 }
+
 function workerLoop(IdleDeadline) {
 	let shouldYield = false;
 	while (!shouldYield && nextWorkOfUnit) {
@@ -233,8 +235,10 @@ function workerLoop(IdleDeadline) {
 	}
 	requestIdleCallback(workerLoop)
 }
+
 let stateHooks;
 let stateHooksIndex;
+
 function useState(initialState) {
 	//存储state 的值到当前currentFiber 上
 	let currentFiber = wipFiber;
@@ -253,8 +257,9 @@ function useState(initialState) {
 	currentFiber.stateHooks = stateHooks;
 	stateHooksIndex++;
 	const setState = (action) => {
-		// stateHook.state = action(stateHook.state)
 		const _action = typeof action === "function" ? action : () => action;
+		const eagerState = _action(stateHook.state);
+		if (eagerState === stateHook.state) return;
 		stateHook.queue.push(_action)
 		//更新视图
 		wipRoot = {
@@ -271,4 +276,5 @@ requestIdleCallback(workerLoop);
 const React = {
 	render, createElement, update, useState
 }
+
 export default React
