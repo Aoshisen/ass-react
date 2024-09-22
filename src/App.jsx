@@ -1,43 +1,16 @@
 import React from "./core/React.js"
-let fooCount = 1;
-let barCount = 1;
-let appCount = 1;
-function Foo() {
-	console.log("Foo component updated")
-	const update = React.update()
-	function handleOnclick() {
-		fooCount++;
-		update()
-	}
-	return <div>
-		count:{fooCount}
-		<button onClick={handleOnclick}>add</button>
-	</div>
-}
-
-function Bar() {
-	console.log("Bar component updated")
-	const update = React.update()
-	function handleOnclick() {
-		barCount++;
-		update()
-	}
-	return <div>
-		count:{barCount}
-		<button onClick={handleOnclick}>add</button>
-	</div>
-}
 export default function App() {
-	console.log("App component updated")
 	const update = React.update()
+	const [count, setCount] = React.useState(10)
+	const [bar, setBar] = React.useState("bar")
 	function handleOnclick() {
-		appCount++;
-		update()
+		setCount((e) => e + 1)
+		setBar((e) => e + "bar")
 	}
 	return <div>
-		count:{appCount}
+		count:{count}
+		<br />
+		bar:{bar}
 		<button onClick={handleOnclick}>add</button>
-		<Foo />
-		<Bar />
 	</div>
 }

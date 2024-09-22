@@ -143,6 +143,8 @@ function reconcileChildren(fiber, children) {
 }
 
 function updateFunctionComponent(fiber) {
+	stateHooks = []
+	stateHooksIndex = 0
 	wipFiber = fiber;
 	const children = [fiber.type(fiber.props)];
 	reconcileChildren(fiber, children)
@@ -231,10 +233,33 @@ function workerLoop(IdleDeadline) {
 	}
 	requestIdleCallback(workerLoop)
 }
+let stateHooks;
+let stateHooksIndex;
+function useState(initialState) {
+	//存储state 的值到当前currentFiber 上
+	let currentFiber = wipFiber;
+	const oldHook = currentFiber.alternate?.stateHooks[stateHooksIndex];
+	const stateHook = {
+		state: oldHook?.state ? oldHook.state : initialState
+	}
+	stateHooks.push(stateHook)
+	currentFiber.stateHooks = stateHooks;
+	stateHooksIndex++;
+	const setState = (action) => {
+		stateHook.state = action(stateHook.state)
+		//更新视图
+		wipRoot = {
+			...currentFiber,
+			alternate: currentFiber,
+		}
+		nextWorkOfUnit = wipRoot;
+	}
+	return [stateHook.state, setState]
+}
 
 requestIdleCallback(workerLoop);
 
 const React = {
-	render, createElement, update
+	render, createElement, update, useState
 }
 export default React
