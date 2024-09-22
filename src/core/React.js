@@ -254,7 +254,8 @@ function useState(initialState) {
 	stateHooksIndex++;
 	const setState = (action) => {
 		// stateHook.state = action(stateHook.state)
-		stateHook.queue.push(action)
+		const _action = typeof action === "function" ? action : () => action;
+		stateHook.queue.push(_action)
 		//更新视图
 		wipRoot = {
 			...currentFiber,

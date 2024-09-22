@@ -5,7 +5,8 @@ export default function App() {
 	const [bar, setBar] = React.useState("bar")
 	function handleOnclick() {
 		setCount((e) => e + 1)
-		setBar((e) => e + "bar")
+		// setBar((e) => e + "bar")
+		setBar("ass")
 	}
 	return <div>
 		count:{count}
