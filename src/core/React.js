@@ -115,7 +115,6 @@ function reconcileChildren(fiber, children) {
 				// console.log("should delete", oldFiber)
 				deletions.push(oldFiber)
 			}
-
 		}
 		if (oldFiber) {
 			oldFiber = oldFiber.sibling
@@ -128,6 +127,11 @@ function reconcileChildren(fiber, children) {
 		}
 		prevChild = newFiber;
 	});
+
+	while (oldFiber) {
+		deletions.push(oldFiber)
+		oldFiber = oldFiber.sibling;
+	}
 }
 
 function updateFunctionComponent(fiber) {

@@ -1,7 +1,12 @@
 import React from "./core/React.js"
 let toggle = true;
 export default function App() {
-	const Foo = () => <p>foo</p>;
+	const foo = (
+		<div>foo
+			<div>child 1</div>
+			<div>child 2</div>
+		</div>
+	);
 	const bar = <div>bar</div>
 	function toggleFooBar() {
 		toggle = !toggle;
@@ -11,7 +16,7 @@ export default function App() {
 		test for update
 		<div>
 			{
-				toggle ? <Foo /> : bar
+				toggle ? foo : bar
 			}
 		</div>
 		<button onClick={toggleFooBar}>toggle</button>
