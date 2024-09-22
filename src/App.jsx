@@ -13,13 +13,8 @@ export default function App() {
 		React.update(App, null)
 	}
 	return <div>
-		test for update
-		<div>
-			{
-				toggle ? foo : bar
-			}
-		</div>
 		<button onClick={toggleFooBar}>toggle</button>
+		{toggle&&foo}
 	</div>
 
 }

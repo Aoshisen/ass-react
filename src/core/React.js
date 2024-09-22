@@ -101,14 +101,16 @@ function reconcileChildren(fiber, children) {
 				alternate: oldFiber,
 			}
 		} else {
-			newFiber = {
-				type: child.type,
-				props: child.props,
-				sibling: null,
-				child: null,
-				parent: fiber,
-				dom: null,
-				effectTag: "placement"
+			if (child) {
+				newFiber = {
+					type: child.type,
+					props: child.props,
+					sibling: null,
+					child: null,
+					parent: fiber,
+					dom: null,
+					effectTag: "placement"
+				}
 			}
 			//如果类型不一样的话就去删除当前的节点, 创建当前需要删除节点的一个数组, 在重新commitRoot 的时候再去删除数组里面的元素
 			if (oldFiber) {
@@ -125,7 +127,9 @@ function reconcileChildren(fiber, children) {
 		else {
 			prevChild.sibling = newFiber;
 		}
-		prevChild = newFiber;
+		if (newFiber) {
+			prevChild = newFiber;
+		}
 	});
 
 	while (oldFiber) {
