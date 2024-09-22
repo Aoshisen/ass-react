@@ -240,13 +240,21 @@ function useState(initialState) {
 	let currentFiber = wipFiber;
 	const oldHook = currentFiber.alternate?.stateHooks[stateHooksIndex];
 	const stateHook = {
-		state: oldHook?.state ? oldHook.state : initialState
+		state: oldHook ? oldHook.state : initialState,
+		queue: oldHook ? oldHook.queue : []
 	}
-	stateHooks.push(stateHook)
+
+	stateHook.queue.forEach(action => {
+		stateHook.state = action(stateHook.state)
+	})
+
+	stateHook.queue = [];
+	stateHooks.push(stateHook);
 	currentFiber.stateHooks = stateHooks;
 	stateHooksIndex++;
 	const setState = (action) => {
-		stateHook.state = action(stateHook.state)
+		// stateHook.state = action(stateHook.state)
+		stateHook.queue.push(action)
 		//更新视图
 		wipRoot = {
 			...currentFiber,
