@@ -3,6 +3,8 @@ let nextWorkOfUnit = null;
 let wipRoot = null;
 let currentRoot = null;
 let deletions = [];
+//正在处理的fiber;
+let wipFiber = null;
 
 function createTextNode(text) {
 	return {
@@ -41,13 +43,15 @@ function render(el, container) {
 }
 
 function update() {
-	//在这里去初始化 我们的任务
-	nextWorkOfUnit = {
-		dom: currentRoot.dom,
-		props: currentRoot.props,
-		alternate: currentRoot,
+	let currentFiber = wipFiber;
+	//更改了wipRoot 和下一个任务
+	return () => {
+		wipRoot = {
+			...currentFiber,
+			alternate: currentFiber,
+		}
+		nextWorkOfUnit = wipRoot;
 	}
-	wipRoot = nextWorkOfUnit;
 }
 
 function createDom(type) {
@@ -139,6 +143,7 @@ function reconcileChildren(fiber, children) {
 }
 
 function updateFunctionComponent(fiber) {
+	wipFiber = fiber;
 	const children = [fiber.type(fiber.props)];
 	reconcileChildren(fiber, children)
 }
@@ -214,11 +219,12 @@ function commitWork(fiber) {
 function workerLoop(IdleDeadline) {
 	let shouldYield = false;
 	while (!shouldYield && nextWorkOfUnit) {
-		const remaining = IdleDeadline.timeRemaining()
 		nextWorkOfUnit = performWorkUnit(nextWorkOfUnit)
-		if (remaining < 1) {
-			shouldYield = true;
+		// 特别注意 这里并不是wipFiber de sibling 而是wipRoot de sibling ,在初始渲染的时候wipRoot 永远都为root 节点,在更新的时候会变化,
+		if (wipRoot?.sibling?.type === nextWorkOfUnit?.type) {
+			nextWorkOfUnit = undefined;
 		}
+		shouldYield = IdleDeadline.timeRemaining() < 1
 	}
 	if (!nextWorkOfUnit && wipRoot) {
 		commitRoot()
