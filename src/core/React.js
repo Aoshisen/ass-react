@@ -212,7 +212,7 @@ function commitEffectHook() {
 		if (!fiber.alternate) {
 			//init
 			fiber.effectHooks?.forEach(effectHook => {
-				effectHook?.callback()
+				effectHook.cleanup = effectHook?.callback()
 			})
 		}
 		else {
@@ -225,7 +225,7 @@ function commitEffectHook() {
 						return oldDep !== newHook.deps[i]
 					})
 					if (shouldUpdate) {
-						newHook.callback()
+						newHook.cleanup = newHook.callback()
 					}
 				}
 			})
@@ -234,6 +234,20 @@ function commitEffectHook() {
 		run(fiber.sibling);
 		run(fiber.child)
 	}
+	//在调用所有的effect之前调用 cleanup
+	function cleanup(fiber) {
+		if (!fiber) return;
+		//注意这里是拿到之前的effectHooks
+		fiber.alternate?.effectHooks?.forEach((hook, index) => {
+			if (hook?.deps.length > 0) {
+				//当其依赖项大于0 的时候才调用其cleanup 方法;
+				hook?.cleanup()
+			}
+		})
+		cleanup(fiber.sibling);
+		cleanup(fiber.child)
+	}
+	cleanup(wipRoot);
 	run(wipRoot)
 }
 
@@ -309,7 +323,8 @@ let effectHooks;
 function useEffect(callback, deps) {
 	const effectHook = {
 		callback: callback,
-		deps: deps
+		deps: deps,
+		cleanup: undefined,
 	}
 	effectHooks.push(effectHook)
 	wipFiber.effectHooks = effectHooks;
