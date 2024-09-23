@@ -197,10 +197,22 @@ function commitDeletions(fiber) {
 function commitRoot() {
 	//删除需要删除的节点
 	deletions.forEach(commitDeletions)
+	commitEffectHook()
 	commitWork(wipRoot.child)
 	currentRoot = wipRoot;
 	wipRoot = null;
 	deletions = []
+}
+function commitEffectHook() {
+	//针对所有的function component 检查一下是否有effectHook ,如果有就执行它,
+	function run(fiber) {
+		if (!fiber) return;
+		console.log(fiber, "this is fiber")
+		fiber.effectHook?.callback();
+		run(fiber.sibling);
+		run(fiber.child)
+	}
+	run(wipRoot)
 }
 
 function commitWork(fiber) {
@@ -271,10 +283,18 @@ function useState(initialState) {
 	return [stateHook.state, setState]
 }
 
+function useEffect(callback, deps) {
+	const effectHook = {
+		callback: callback,
+		deps: deps
+	}
+	wipFiber.effectHook = effectHook;
+}
+
 requestIdleCallback(workerLoop);
 
 const React = {
-	render, createElement, update, useState
+	render, createElement, update, useState, useEffect
 }
 
 export default React
