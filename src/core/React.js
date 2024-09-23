@@ -205,10 +205,25 @@ function commitRoot() {
 }
 function commitEffectHook() {
 	//针对所有的function component 检查一下是否有effectHook ,如果有就执行它,
+	// 两个参数的时候区分是否是初始化的时候,如果是初始化的时候执行所有的callback,如果不是初始化的时候,看看deps 有没有改变,如果改变了执行其callback
 	function run(fiber) {
 		if (!fiber) return;
-		console.log(fiber, "this is fiber")
-		fiber.effectHook?.callback();
+		if (!fiber.alternate) {
+			//init
+			fiber.effectHook?.callback();
+		}
+		else {
+			//update
+			//如何判断当前的deps 有没有发生改变呢
+			const oldEffectHook = fiber.alternate?.effectHook;
+			const shouldUpdate = oldEffectHook?.deps.some((oldDep, index) => {
+				return oldDep !== fiber.effectHook?.deps[index];
+			})
+			if (shouldUpdate) {
+				fiber.effectHook?.callback();
+			}
+		}
+
 		run(fiber.sibling);
 		run(fiber.child)
 	}
