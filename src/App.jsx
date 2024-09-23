@@ -5,8 +5,11 @@ export default function App() {
 		setCount((e) => e + 1)
 	}
 	React.useEffect(() => {
-		//开始的时候执行一次
-		console.log("useEffect")
+		console.log("init")
+	}, [])
+
+	React.useEffect(() => {
+		console.log("update",count)
 	}, [count])
 	return <div>
 		count:{count}

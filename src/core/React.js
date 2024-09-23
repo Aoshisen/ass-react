@@ -144,6 +144,7 @@ function reconcileChildren(fiber, children) {
 
 function updateFunctionComponent(fiber) {
 	stateHooks = []
+	effectHooks = []
 	stateHooksIndex = 0
 	wipFiber = fiber;
 	const children = [fiber.type(fiber.props)];
@@ -210,18 +211,24 @@ function commitEffectHook() {
 		if (!fiber) return;
 		if (!fiber.alternate) {
 			//init
-			fiber.effectHook?.callback();
+			fiber.effectHooks?.forEach(effectHook => {
+				effectHook?.callback()
+			})
 		}
 		else {
 			//update
 			//如何判断当前的deps 有没有发生改变呢
-			const oldEffectHook = fiber.alternate?.effectHook;
-			const shouldUpdate = oldEffectHook?.deps.some((oldDep, index) => {
-				return oldDep !== fiber.effectHook?.deps[index];
+			fiber.effectHooks?.forEach((newHook, index) => {
+				if (newHook.deps > 0) {
+					const oldEffectHook = fiber.alternate?.effectHooks[index];
+					const shouldUpdate = oldEffectHook?.deps.some((oldDep, i) => {
+						return oldDep !== newHook.deps[i]
+					})
+					if (shouldUpdate) {
+						newHook.callback()
+					}
+				}
 			})
-			if (shouldUpdate) {
-				fiber.effectHook?.callback();
-			}
 		}
 
 		run(fiber.sibling);
@@ -298,12 +305,14 @@ function useState(initialState) {
 	return [stateHook.state, setState]
 }
 
+let effectHooks;
 function useEffect(callback, deps) {
 	const effectHook = {
 		callback: callback,
 		deps: deps
 	}
-	wipFiber.effectHook = effectHook;
+	effectHooks.push(effectHook)
+	wipFiber.effectHooks = effectHooks;
 }
 
 requestIdleCallback(workerLoop);
